@@ -5,6 +5,7 @@ using System.Text;
 using System.IO;
 using System.Net.Sockets;
 using System.Threading;
+using System.Collections;
 
 namespace ConsoleApplication1
 {
@@ -60,7 +61,7 @@ namespace ConsoleApplication1
                             }
                             break;
                         case "msglobby":
-                            MessageLobby(playername, action[1]);
+                            MessageLobby(action[1]);
                             Console.WriteLine(playername+": "+action[1]);
                             break;
                         case "joinlobby":
@@ -79,6 +80,10 @@ namespace ConsoleApplication1
                             ConsoleApplication1.Server.lobbies.Add(action[1], userlist);
                             ConsoleApplication1.Server.playerInLobby.Add(playername, action[1]);
                             break;
+                        case "listlobby":
+                            Console.WriteLine(playername + " fetching lobbies");
+                            toClient.WriteLine("listlobby" + FetchLobbies());
+                            break;
                         case "what":
                             Console.WriteLine(ConsoleApplication1.Server.playersByConnect[theClient]);
                             toClient.WriteLine("msg;Hi");
@@ -96,6 +101,8 @@ namespace ConsoleApplication1
                 //Console.WriteLine(e44);
                 ConsoleApplication1.Server.players.Remove(playername);
                 ConsoleApplication1.Server.playersByConnect.Remove(theClient);
+
+                LeaveLobby();
                 Console.WriteLine(playername+" lost connection");
             }
         }
@@ -120,16 +127,43 @@ namespace ConsoleApplication1
                 return false;
             }
         }
-        private void MessageLobby(string player, string msg)
+        private void MessageLobby(string msg)
         {
-            string lobbyname = (string)ConsoleApplication1.Server.playerInLobby[player];
+            string lobbyname = (string)ConsoleApplication1.Server.playerInLobby[playername];
             List<string> listofplayers = (List<string>)ConsoleApplication1.Server.lobbies[lobbyname];
             foreach(String user in listofplayers)
             {
                 TcpClient client = (TcpClient)ConsoleApplication1.Server.players[user];
                 toClient = new StreamWriter(client.GetStream());
-                toClient.WriteLine("msglobby;"+player+": "+msg);
+                toClient.WriteLine("msglobby;"+playername+": "+msg);
                 toClient.Flush();
+            }
+        }
+        private string FetchLobbies()
+        {
+            string lobbies = "";
+            foreach (DictionaryEntry entry in ConsoleApplication1.Server.lobbies)
+            {
+                List<string> players = (List<string>)entry.Value;
+                lobbies += ";"+entry.Key + ";" + players.Count;
+            }
+            if (lobbies == "")
+                return ";";
+            else
+                return lobbies;
+        }
+        public void LeaveLobby()
+        {
+            string lobby = (string)ConsoleApplication1.Server.playerInLobby[playername];
+            if (lobby != null)
+            {
+                ConsoleApplication1.Server.playerInLobby.Remove(playername);
+                List<string> players = (List<string>)ConsoleApplication1.Server.lobbies[lobby];
+                if (players.Count == 1)
+                {
+                    ConsoleApplication1.Server.lobbies.Remove(lobby);
+                    Console.WriteLine("Lobby " + lobby + " removed");
+                }
             }
         }
     }
