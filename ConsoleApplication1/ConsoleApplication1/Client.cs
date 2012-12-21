@@ -48,16 +48,19 @@ namespace ConsoleApplication1
                         case "mes":
                             Console.WriteLine(playername+": "+action[1]);
                             toClient.WriteLine("msg;Message received");
+                            toClient.Flush();
                             break;
                         case "username":
                             if (Username(action[1]))
                             {
                                 toClient.WriteLine("username;ok");
+                                toClient.Flush();
                                 userdata = new User(action[1]);
                             }
                             else
                             {
                                 toClient.WriteLine("username;nope");
+                                toClient.Flush();
                             }
                             break;
                         case "msglobby":
@@ -65,33 +68,47 @@ namespace ConsoleApplication1
                             Console.WriteLine(playername+": "+action[1]);
                             break;
                         case "joinlobby":
-                            toClient.WriteLine("startlobby;");
-                            Console.WriteLine(playername + " joined lobby " + action[1]);
-                            List<string> test = (List<string>)ConsoleApplication1.Server.lobbies[action[1]];
-                            test.Add(playername);
-                            ConsoleApplication1.Server.lobbies[action[1]] = test;
-                            ConsoleApplication1.Server.playerInLobby.Add(playername, action[1]);
+                            if (playername != "noname")
+                            {
+                                toClient.WriteLine("startlobby;");
+                                toClient.Flush();
+                                Console.WriteLine(playername + " joined lobby " + action[1]);
+                                List<string> test = (List<string>)ConsoleApplication1.Server.lobbies[action[1]];
+                                test.Add(playername);
+                                ConsoleApplication1.Server.lobbies[action[1]] = test;
+                                ConsoleApplication1.Server.playerInLobby.Add(playername, action[1]);
+                                MessageLobby("*joined lobby*");
+                            }
+                            else
+                            {
+                                toClient.WriteLine("needusername;");
+                            }
                             break;
                         case "createlobby":
                             toClient.WriteLine("startlobby;");
+                            toClient.Flush();
                             Console.WriteLine(playername + " started lobby " + action[1]);
                             List<string> userlist = new List<string>();
                             userlist.Add(playername);
                             ConsoleApplication1.Server.lobbies.Add(action[1], userlist);
                             ConsoleApplication1.Server.playerInLobby.Add(playername, action[1]);
                             break;
+                        case "leavelobby":
+                            LeaveLobby();
+                            break;
                         case "listlobby":
                             Console.WriteLine(playername + " fetching lobbies");
                             toClient.WriteLine("listlobby" + FetchLobbies());
+                            toClient.Flush();
                             break;
                         case "what":
                             Console.WriteLine(ConsoleApplication1.Server.playersByConnect[theClient]);
                             toClient.WriteLine("msg;Hi");
+                            toClient.Flush();
                             break;
                         default:
                             break;
                     }
-                    toClient.Flush();
                     //send our message
                     //ConsoleApplication1.Server.SendMsgToAll(nickName, line);
                 }
@@ -158,6 +175,7 @@ namespace ConsoleApplication1
             if (lobby != null)
             {
                 ConsoleApplication1.Server.playerInLobby.Remove(playername);
+                Console.WriteLine(playername + " left lobby " + lobby);
                 List<string> players = (List<string>)ConsoleApplication1.Server.lobbies[lobby];
                 if (players.Count == 1)
                 {
