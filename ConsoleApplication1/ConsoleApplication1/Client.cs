@@ -17,6 +17,11 @@ namespace ConsoleApplication1
         StreamReader fromClient;
         string playername = "noname";
 
+        /// <summary>
+        /// Starts a new thread that will listen for all incoming data from
+        /// the connected client
+        /// </summary>
+        /// <param name="client"></param>
         public Client(TcpClient client)
         {
             this.theClient = client;
@@ -25,6 +30,11 @@ namespace ConsoleApplication1
             clientThread.Start();
         }
 
+        /// <summary>
+        /// This is run in the thread started in the constructor.
+        /// it's listening for incomming data and parses it and sends a response
+        /// back to the client
+        /// </summary>
         public void startConversation()
         {
             Console.WriteLine("Starting conversation...");
@@ -123,6 +133,12 @@ namespace ConsoleApplication1
                 Console.WriteLine(playername+" lost connection");
             }
         }
+
+        /// <summary>
+        /// Checks if username is already taken on the server.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         private bool Username(string name)
         {
             if (ConsoleApplication1.Server.players.Contains(name))
@@ -144,6 +160,13 @@ namespace ConsoleApplication1
                 return false;
             }
         }
+
+        /// <summary>
+        /// Handles communication for players in a lobby.
+        /// Like sending messages in the lobby, or sending game data with
+        /// stats from one player to all the others.
+        /// </summary>
+        /// <param name="msg"></param>
         private void MessageLobby(string msg)
         {
             string lobbyname = (string)ConsoleApplication1.Server.playerInLobby[playername];
@@ -156,6 +179,11 @@ namespace ConsoleApplication1
                 toClient.Flush();
             }
         }
+
+        /// <summary>
+        /// Fetches all the lobbies and returns them as a string to be sent back to client
+        /// </summary>
+        /// <returns></returns>
         private string FetchLobbies()
         {
             string lobbies = "";
@@ -169,6 +197,12 @@ namespace ConsoleApplication1
             else
                 return lobbies;
         }
+
+        /// <summary>
+        /// When a player leaves lobby or disconnects this function is run to remove player
+        /// from any lobby they were in and if the only one on the lobby, remove the lobby
+        /// as well
+        /// </summary>
         public void LeaveLobby()
         {
             string lobby = (string)ConsoleApplication1.Server.playerInLobby[playername];

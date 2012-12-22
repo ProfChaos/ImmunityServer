@@ -13,6 +13,11 @@ namespace ConsoleApplication1
         private int towersBuilt = 0;
         private int ready = 0;
 
+
+        /// <summary>
+        /// This may be used for storing all the data from a player.
+        /// </summary>
+        /// <param name="username"></param>
         public User(string username)
         {
             this.username = username;
